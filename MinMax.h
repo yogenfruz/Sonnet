@@ -220,7 +220,12 @@ void doPlayCard(Card playedCard, const GameState& oldGameState, bool maximizingP
 	{
 		if (playedCard == Guard)
 		{
-			for (const Card& guessCard : CardDeck::s_allCards)
+			Cards possibleCards;
+			possibleCards.push_back(newState.burnCard);
+			eastl::copy(newState.faceupDiscards.begin(), newState.faceupDiscards.end(), possibleCards.begin());
+			Card otherCard = (maximizingPlayer ? newState.theirCard : newState.myCard);
+			possibleCards.push_back(otherCard);
+			for (const Card& guessCard : possibleCards)
 			{
 				if (guessCard == Guard)
 					continue;
