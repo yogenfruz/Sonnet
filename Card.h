@@ -16,6 +16,7 @@ enum Card
 	Countess = 1 << 6,
 	Princess = 1 << 7,
 	InvalidCard = 1 << 8,
+	NoCard = 0,
 };
 
 const unsigned int NumFaceupDiscardedCards = 3;

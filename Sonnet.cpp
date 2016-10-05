@@ -27,10 +27,15 @@ void writeCards()
 
 }
 
-Card cardNumberToCard(unsigned int cardNumber)
+Card cardNumberToCard(unsigned int cardNumber, bool allowZero)
 {
 	switch (cardNumber)
 	{
+	case 0:
+		if (allowZero)
+			return NoCard;
+		else
+			return InvalidCard;
 	case 1:
 		return Guard;
 	case 2:
@@ -54,21 +59,25 @@ Card cardNumberToCard(unsigned int cardNumber)
 }
 
 
-Card getCard(const char* reason)
+Card getCard(const char* reason, bool zeroForDone = false)
 {
 	using std::cin;
 	using std::cout;
 	using std::endl;
 
 	Card card = InvalidCard;
+	writeCards();
+	cout << reason << endl;
+	unsigned int cardNumber = ~0u;
 	while (card == InvalidCard)
 	{
-		writeCards();
 		cout << "Enter a card number: " << endl;
-		cout << reason << endl;
-		unsigned int cardNumber = ~0u;
-		cin >> cardNumber;
-		card = cardNumberToCard(cardNumber);
+		while (!(cin >> cardNumber))
+		{
+			cin.clear();
+			cin.ignore(eastl::numeric_limits<std::streamsize>::max(), '\n');
+		}
+		card = cardNumberToCard(cardNumber, zeroForDone);
 	}
 	return card;
 }
@@ -82,6 +91,46 @@ Cards getFaceupDiscards()
 		faceupDiscards.push_back(faceupDiscard);
 	}
 	return faceupDiscards;
+}
+
+Card getMyCard()
+{
+	return getCard("Please enter my card.");
+}
+
+Card getMyOtherCard()
+{
+	return getCard("Please enter my other card.");
+}
+
+Cards getMyPlayedCards()
+{
+	Cards myPlayedCards;
+
+	while (Card myPlayedCard = getCard("Enter the next card I've already played/discarded.", true))
+	{
+		if (myPlayedCard != NoCard)
+			myPlayedCards.push_back(myPlayedCard);
+		else
+			break;
+	}
+	
+	return myPlayedCards;
+}
+
+Cards getTheirPlayedCards()
+{
+	Cards theirPlayedCards;
+
+	while (Card theirPlayedCard = getCard("Enter the next card they've already played/discarded.", true))
+	{
+		if (theirPlayedCard != NoCard)
+			theirPlayedCards.push_back(theirPlayedCard);
+		else
+			break;
+	}
+
+	return theirPlayedCards;
 }
 
 }
@@ -98,14 +147,17 @@ int main()
 	cout << "Welcome to Sonnet" << endl;
 
 	VisibleGameState vgs;
-	vgs.myCard = Guard;
-	vgs.myOtherCard = Baron;
 
 	vgs.faceupDiscards = getFaceupDiscards();
-	vgs.myPlayedCards = { Prince };
-	vgs.theirPlayedCards = { Countess, Priest };
+	vgs.myCard = getMyCard();
+	vgs.myOtherCard = getMyOtherCard();
+
+	vgs.myPlayedCards = getMyPlayedCards();
+	vgs.theirPlayedCards = getTheirPlayedCards();
 
 	auto result = minimaxStart(vgs);
+
+	cout << "I want to play " << cardToString(result.cardToPlay) << " with an expected win percentage of " << result.expectedWinPercentage << "%" << endl;
 
 	cin.get();
 

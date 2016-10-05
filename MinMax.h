@@ -14,21 +14,21 @@ namespace Sonnet
 		switch (card)
 		{
 		case Card::Guard:
-			return "Grd";
+			return "Guard";
 		case Card::Priest:
-			return "Pst";
+			return "Priest";
 		case Card::Baron:
-			return "Brn";
+			return "Baron";
 		case Card::Handmaid:
-			return "Hnd";
+			return "Handmaid";
 		case Card::Prince:
-			return "Prn";
+			return "Prince";
 		case Card::King:
-			return "Kng";
+			return "King";
 		case Card::Countess:
-			return "Cts";
+			return "Countess";
 		case Card::Princess:
-			return "Pnc";
+			return "Princess";
 		}
 		return "what?";
 	}
@@ -70,6 +70,11 @@ struct PrinceState
 	bool discardMe = false;
 };
 
+struct KnowledgeState
+{
+	Card knownCard = InvalidCard;
+};
+
 struct GameState
 {
 	Card myCard;
@@ -88,6 +93,9 @@ struct GameState
 	GuardState guardState;
 
 	PrinceState princeState;
+
+	KnowledgeState myKnowledgeState;
+	KnowledgeState theirKnowledgeState;
 
 	bool triggerBaron = false;
 
@@ -193,6 +201,13 @@ void doPlayCard(Card playedCard, const GameState& oldGameState, bool maximizingP
 		newState.theirState = PlayerState();
 	newState.princeState = PrinceState();
 	newState.guardState = GuardState();
+
+	newState.playedCard = playedCard;
+
+	KnowledgeState& knowledgeLoser = (maximizingPlayer ? newState.theirKnowledgeState : newState.myKnowledgeState);
+	if (knowledgeLoser.knownCard == playedCard)
+		knowledgeLoser = KnowledgeState();
+
 	const PlayerState& otherPlayer = maximizingPlayer ? newState.theirState : newState.myState;
 	if (otherPlayer.handmaidProtected)
 	{
@@ -221,10 +236,16 @@ void doPlayCard(Card playedCard, const GameState& oldGameState, bool maximizingP
 		if (playedCard == Guard)
 		{
 			Cards possibleCards;
+			eastl::copy(newState.remainingDeck.begin(), newState.remainingDeck.end(), eastl::back_inserter(possibleCards));
 			possibleCards.push_back(newState.burnCard);
-			eastl::copy(newState.faceupDiscards.begin(), newState.faceupDiscards.end(), possibleCards.begin());
 			Card otherCard = (maximizingPlayer ? newState.theirCard : newState.myCard);
 			possibleCards.push_back(otherCard);
+			const KnowledgeState& knownCard = (maximizingPlayer ? newState.myKnowledgeState : newState.theirKnowledgeState);
+			if (knownCard.knownCard != InvalidCard && knownCard.knownCard != Guard)
+			{
+				possibleCards.clear();
+				possibleCards.push_back(knownCard.knownCard);
+			}
 			for (const Card& guessCard : possibleCards)
 			{
 				if (guessCard == Guard)
@@ -239,6 +260,9 @@ void doPlayCard(Card playedCard, const GameState& oldGameState, bool maximizingP
 		}
 		else if (playedCard == Priest)
 		{
+			KnowledgeState& knowledgeGainer = (maximizingPlayer ? newState.myKnowledgeState : newState.theirKnowledgeState);
+			Card knownCard = (maximizingPlayer ? newState.theirCard : newState.myCard);
+			knowledgeGainer.knownCard = knownCard;
 			outGameStates.push_back(newState);
 		}
 		else if (playedCard == Baron)
@@ -276,6 +300,10 @@ void doPlayCard(Card playedCard, const GameState& oldGameState, bool maximizingP
 		else if (playedCard == King)
 		{
 			eastl::swap(newState.myCard, newState.theirCard);
+			outGameStates.push_back(newState);
+		}
+		else if (playedCard == Countess)
+		{
 			outGameStates.push_back(newState);
 		}
 		else if (playedCard == Princess)
@@ -346,7 +374,7 @@ MiniMaxResult minimax(const GameState& gameState, bool maximizingPlayer)
 		{
 			// Play old card
 			GameState playedOldCard = newState;
-			Card playedCard = playedOldCard.myCard;
+			Card playedCard = playedOldCard.theirCard;
 			playedOldCard.theirCard = drawCard;
 			doPlayCard(playedCard, playedOldCard, false, gameStates);
 		}
@@ -388,6 +416,7 @@ struct VisibleGameState
 struct MoveToPlay
 {
 	GameScore expectedScore;
+	double expectedWinPercentage;
 	Card cardToPlay;
 };
 
@@ -492,6 +521,7 @@ MoveToPlay minimaxStart(VisibleGameState state)
 		
 	Play bestPlay;
 	double bestScore = eastl::numeric_limits<double>::lowest();
+	double bestWinPercentage = 0.0;
 
 	for (const auto& pair : cardTotals)
 	{
@@ -515,10 +545,11 @@ MoveToPlay minimaxStart(VisibleGameState state)
 		{
 			bestScore = computedScore;
 			bestPlay = playedPlay;
+			bestWinPercentage = percentChance;
 		}
 	}
 
-	return MoveToPlay{ (GameScore)bestScore, bestPlay.card };
+	return MoveToPlay{ (GameScore)bestScore, bestWinPercentage, bestPlay.card };
 }
 
 
