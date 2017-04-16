@@ -51,7 +51,7 @@ Cards CardDeck::getPossibleCards(Card myCard, const Cards& myPlayedCards, const 
 
 float CardDeck::getWinProbality(Card myCard, const Cards & theirPossibleCards)
 {
-	const unsigned int totalPossibilities = theirPossibleCards.size();
+	const size_t totalPossibilities = theirPossibleCards.size();
 	unsigned int totalWins = 0;
 
 	for (const Card& possibleCard : theirPossibleCards)

@@ -10,7 +10,20 @@ CardDecks::CardDecks(Card myCard, Card myOtherCard, const Cards& myPlayedCards, 
 	, m_currentCardDeck(m_sortedCardDeck.getCards())
 	, m_remainingShuffles(true)
 {
-	m_totalDecks = factorial(m_currentCardDeck.size());
+	size_t totalDecks = factorial(m_currentCardDeck.size());
+
+	size_t totalCombos = 1;
+
+	for (Card card : CardDeck::s_allCards)
+	{
+		size_t numberCards = eastl::count(m_currentCardDeck.begin(), m_currentCardDeck.end(), card);
+		if (numberCards == 0)
+			numberCards = 1;
+
+		totalCombos *= factorial(numberCards);
+	}
+	
+	m_totalDecks = totalDecks / totalCombos;
 }
 
 bool CardDecks::getNextCardDeck(Cards& outCardDeck)

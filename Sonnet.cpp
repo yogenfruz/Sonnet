@@ -148,12 +148,21 @@ int main()
 
 	VisibleGameState vgs;
 
-	vgs.faceupDiscards = getFaceupDiscards();
-	vgs.myCard = getMyCard();
-	vgs.myOtherCard = getMyOtherCard();
+	//vgs.faceupDiscards = getFaceupDiscards();
+	//vgs.myCard = getMyCard();
+	//vgs.myOtherCard = getMyOtherCard();
 
-	vgs.myPlayedCards = getMyPlayedCards();
-	vgs.theirPlayedCards = getTheirPlayedCards();
+	//vgs.myPlayedCards = getMyPlayedCards();
+	//vgs.theirPlayedCards = getTheirPlayedCards();
+
+	vgs.faceupDiscards.push_back(Guard);
+
+	vgs.myPlayedCards.push_back(Prince);
+	
+	vgs.theirPlayedCards.push_back(Guard);
+
+	vgs.myCard = Prince;
+	vgs.myOtherCard = Princess;
 
 	auto result = minimaxStart(vgs);
 

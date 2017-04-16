@@ -4,9 +4,9 @@
 namespace Sonnet
 {
 
-constexpr unsigned int factorial(unsigned int n)
+constexpr size_t factorial(size_t n)
 {
-	return (n == 1) ? 1 : n * factorial(n - 1);
+	return (n == 1 || n == 0) ? 1 : n * factorial(n - 1);
 }
 
 const unsigned int RemainingCards = TotalCards - 4;
@@ -19,7 +19,7 @@ public:
 
 	bool getNextCardDeck(Cards& outCardDeck);
 
-	unsigned int totalDecks() const
+	size_t totalDecks() const
 	{
 		return m_totalDecks;
 	}
@@ -27,7 +27,7 @@ public:
 private:
 	CardDeck m_sortedCardDeck;
 	Cards m_currentCardDeck;
-	unsigned int m_totalDecks;
+	size_t m_totalDecks;
 	bool m_remainingShuffles;
 };
 
