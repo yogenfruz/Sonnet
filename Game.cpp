@@ -24,21 +24,22 @@ void doPlayCard(Card playedCard, const GameState& oldGameState, bool maximizingP
 	{
 		if (playedCard == Prince)
 		{
-			newState.princeState.discardMe = true;
+			newState.princeState.discardMe = false;
+			newState.myPlayedCards.push_back(playedCard);
+			outGameStates.push_back(newState);
 			if (newState.myCard != Princess)
 			{
+				if (newState.remainingDeck.size() > 0)
+					newState.myCard = newState.remainingDeck.pop_back();
+				else
+				{
+					newState.myCard = newState.burnCard;
+					newState.burnCard = InvalidCard;
+				}
+				newState.princeState.discardMe = true;
 				outGameStates.push_back(newState);
-			}			
-			newState.myPlayedCards.push_back(playedCard);
-			if (newState.remainingDeck.size() > 0)
-				newState.myCard = newState.remainingDeck.pop_back();
-			else
-			{
-				newState.myCard = newState.burnCard;
-				newState.burnCard = InvalidCard;
+
 			}
-			newState.princeState.discardMe = false;
-			outGameStates.push_back(newState);
 		}
 		else
 		{
